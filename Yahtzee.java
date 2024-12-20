@@ -26,47 +26,60 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
 	}
 
 	private void playGame() {
-        int turnCount = 0;
-        scores = new int[13][nPlayers];
+        scores = new int[TURNS_PER_PLAYER][nPlayers];
 
-        for (int i = 1; i <= nPlayers; i++) {
-            while (turnCount < 13) {
+        for (int t = 0; t < TURNS_PER_PLAYER; t++) {
+            for (int p = 1; p <= nPlayers; p++) {
                 System.out.println("[INFO] starting turn"); // testing
-                display.printMessage(playerNames[i - 1] + "'s turn.");
-                display.waitForPlayerToClickRoll(i);
-                runTurn(i, turnCount);
-                turnCount++;
+                display.printMessage(playerNames[p - 1] + "'s turn. Click \"Roll Dice\" button to roll the dice");
+                display.waitForPlayerToClickRoll(p);
+                runTurn(p, t);
             }
-            turnCount = 0;
         }
 
+        calcTotal(scores);
         System.out.println("[INFO] end of the game"); // testing
 	}
 
-    private void runTurn(int player, int turnCount) {
+    private void runTurn(int player, int turn) {
         int[] dice = new int[5];
         rollDice(dice);
+        display.printMessage("Select the dice you wish to reroll and click the button.");
+
         rerollDice(dice);
+        display.printMessage("Select the dice you wish to reroll and click the button.");
+
         rerollDice(dice);
+        display.printMessage("Select a category for this roll.");
 
         int category = display.waitForPlayerToSelectCategory();
-        if (isValidCategory(category, dice)) {
-            scores[turnCount][player - 1] = sum(dice);
-            display.updateScorecard(category, player, sum(dice));
-        } else {
-            display.updateScorecard(category, player, 0);
-        }
+        countValidPoints(category, dice, player, turn)
+        display.updateScorecard(category, player, scores[turn][player - 1]);
     }
 
-    // check if the selected category matches the dice
-    private boolean isValidCategory(int category, int[] dice) {
-        // TODO check for
-        // - 3 of the kind, 4 of the kind, yahtzee, full house
-        // - small straight, big straight
-        // - anything for one through six and chance
+    // counts the points and puts them in the scoresheet, IF the category is valid
+    // TODO check for
+    // - 3 of the kind, 4 of the kind, yahtzee, full house
+    // - small straight, big straight
+    // - anything for one through six and chance
+    //
+    private void countValidPoints(int category, int[] dice, int player, int turn) {
+        if (category < 7) { // check if the category is valid
+            for (int i = 0; i < dice.length; i++) {
+                if (dice[i] == category) {
+                    scores[turn][player - 1] += category;
+                }
+            }
+        }
 
+        // TODO some general way of checking several categories maybe
+        //switch (category) {
+        //    case THREE_OF_A_KIND:
+        //    case FOUR_OF_A_KIND:
+        //    case YAHTZEE:
+        //    case FULL_HOUSE:
 
-        return true;
+        //}
     }
 
     private void rerollDice(int[] dice) {
@@ -81,6 +94,20 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
         display.displayDice(dice);
     }
 
+    // calculate and display upper and lower scores + total
+    // 1. iterate over the matrix
+    // 2. sum the first part of the column (upper score)
+    // 2.5. check if the upper score >= 63 and add the bonus if it is so
+    // 3. calculate lower score from the column
+    // 4. calculate total by summing upper and lower scores
+    private void calcTotal(int[][] scores) {
+        for (int t = 0; t < TURNS_PER_PLAYER; t++) {
+            for (int p = 1; p <= nPlayers; p++) {
+
+            }
+        }
+    }
+
     // generate random values for the dice and display them
     private void rollDice(int[] dice) {
         for (int i = 0; i < 5; i++) {
@@ -90,14 +117,6 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
         display.displayDice(dice);
     }
 
-    private int sum(int[] dice) {
-        int sum = 0;
-        for (int die : dice) {
-            sum += die;
-        }
-        return sum;
-    }
-
 /* Private instance variables */
 	private int nPlayers;
     private int[][] scores;
@@ -105,4 +124,5 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
 	private YahtzeeDisplay display;
 	private RandomGenerator rgen = new RandomGenerator();
 
+    private static final int TURNS_PER_PLAYER = 13;
 }
