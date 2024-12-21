@@ -55,29 +55,50 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
                 winner = p;
             }
         }
-        display.printMessage("Congratulations, " + playerNames[winner] + "you won with a total score of " + topScore);
+        display.printMessage("Congratulations, " + playerNames[winner - 1] + " you won with a total score of " + topScore);
     }
 
-    // TODO sum up lower and upper scores (bonus included)
+    // TODO decompose this shit
     private void sumScoresheet() {
-        for (int p = 0; p < nPlayers; p++) {
-            int upper = 0;
-            int lower = 0;
+        for (int p = 1; p <= nPlayers; p++) {
+            int upperScore = 0;
+            int lowerScore = 0;
+            int sum = 0;
             // sum upper scores
-            for (int i = 0; i < SIXES; i++) {
+            for (int i = ONES; i <= SIXES; i++) {
+                upperScore += scoresheet[i - 1][p - 1];
+            }
+            display.updateScorecard(UPPER_SCORE, p, upperScore);
+            scoresheet[UPPER_SCORE - 1][p - 1] = upperScore;
 
+            // check if player got the bonus points
+            if (upperScore >= BONUS_EDGE) {
+                scoresheet[UPPER_BONUS - 1][p - 1] = BONUS_POINTS;
+                display.updateScorecard(UPPER_BONUS, p, BONUS_POINTS);
+            } else {
+                scoresheet[UPPER_BONUS - 1][p - 1] = 0;
+                display.updateScorecard(UPPER_BONUS, p, 0);
             }
 
             // sum lower score
+            for (int i = THREE_OF_A_KIND; i <= CHANCE; i++) {
+                lowerScore += scoresheet[i - 1][p - 1];
+            }
+            display.updateScorecard(LOWER_SCORE, p, lowerScore);
+            scoresheet[LOWER_SCORE - 1][p - 1] = lowerScore;
+
             // display total score
+            sum = upperScore + lowerScore + scoresheet[UPPER_BONUS - 1][p - 1];
+            scoresheet[TOTAL - 1][p - 1] = sum;
+            display.updateScorecard(TOTAL, p, sum);
         }
     }
 
     private void runTurn(int player) {
         int[] dice = new int[N_DICE];
         rollDice(dice, player);
-        rerollDice(dice);
-        rerollDice(dice);
+        //rerollDice(dice);
+        //rerollDice(dice);
 
         handleCategories(dice, player);
     }
@@ -86,14 +107,13 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
         display.printMessage("Select a category for this roll.");
         while (true) {
             int category = display.waitForPlayerToSelectCategory();
-            int categoryIdx = (category > 6) ? category - 3 : category - 1;
             // check if the category is available
-            if (scoresheet[categoryIdx][player - 1] == -1) {
+            if (scoresheet[category - 1][player - 1] == -1) {
                 int score = 0;
                 if (validCategory(category, dice)) {
                     score = calculateScore(category, dice);
                 }
-                scoresheet[categoryIdx][player - 1] = score;
+                scoresheet[category - 1][player - 1] = score;
                 display.updateScorecard(category, player, score);
                 break;
             }
@@ -187,6 +207,7 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
 
     // check if the dice array has consecutive numbers (small straight or large straight)
     private boolean isStraight(int category, int[] dice) {
+        // TODO debug large straight case
         Arrays.sort(dice);
         int count = 0;
         for (int i = 0; i < dice.length - 1; i++) {
@@ -250,6 +271,7 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
 	private String[] playerNames;
 	private YahtzeeDisplay display;
 	private RandomGenerator rgen = new RandomGenerator();
-    private int upperScoreTotal = 0;
-    private int lowerScore = 0;
+
+    private static final int BONUS_EDGE = 63;
+    private static final int BONUS_POINTS = 35;
 }
