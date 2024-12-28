@@ -215,7 +215,6 @@ public class Yahtzee extends GraphicsProgram implements YahtzeeConstants {
         Arrays.sort(dice);
         int count = 0;
         for (int i = 0; i < dice.length - 1; i++) {
-            if (dice[i] == dice[i + 1]) continue;
             if (dice[i + 1] - dice[i] == 1) {
                 count++;
             }
